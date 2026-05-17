@@ -88,7 +88,10 @@ class CP_Post_Types {
             </tr>
             <tr>
                 <th><label for="cp_deadline">Application Deadline</label></th>
-                <td><input type="date" id="cp_deadline" name="cp_deadline" value="<?php echo esc_attr($deadline); ?>"></td>
+                <td>
+                    <input type="datetime-local" id="cp_deadline" name="cp_deadline" value="<?php echo esc_attr( CP_Deadline::value_for_input( $deadline ) ); ?>" class="regular-text">
+                    <p class="description">Date and time use your site timezone (<?php echo esc_html( wp_timezone_string() ); ?>). Leave blank for no deadline.</p>
+                </td>
             </tr>
             <tr>
                 <th>Portfolio Required?</th>
@@ -163,11 +166,15 @@ class CP_Post_Types {
         if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) return;
         if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-        $fields = array( 'cp_location', 'cp_job_type', 'cp_salary', 'cp_deadline' );
+        $fields = array( 'cp_location', 'cp_job_type', 'cp_salary' );
         foreach ( $fields as $field ) {
-            if ( isset( $_POST[$field] ) ) {
-                update_post_meta( $post_id, '_' . $field, sanitize_text_field( $_POST[$field] ) );
+            if ( isset( $_POST[ $field ] ) ) {
+                update_post_meta( $post_id, '_' . $field, sanitize_text_field( $_POST[ $field ] ) );
             }
+        }
+
+        if ( isset( $_POST['cp_deadline'] ) ) {
+            update_post_meta( $post_id, CP_Deadline::META_KEY, CP_Deadline::sanitize_input( $_POST['cp_deadline'] ) );
         }
 
         update_post_meta( $post_id, '_cp_require_portfolio', isset( $_POST['cp_require_portfolio'] ) ? '1' : '0' );

@@ -272,10 +272,20 @@ class CP_Admin {
             update_option( 'cp_admin_email', sanitize_email($_POST['cp_admin_email']) );
             echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
         }
-        $admin_email = get_option( 'cp_admin_email', get_option('admin_email') );
+        $admin_email     = get_option( 'cp_admin_email', get_option('admin_email') );
+        $careers_page_id = (int) get_option( 'cp_careers_page_id', 0 );
+        $careers_url     = $careers_page_id ? get_permalink( $careers_page_id ) : '';
         ?>
         <div class="wrap cp-admin-wrap">
             <h1>Career Portal Settings</h1>
+            <?php if ( $careers_url ) : ?>
+            <p>
+                <?php esc_html_e( 'Careers listing page:', 'career-portal' ); ?>
+                <a href="<?php echo esc_url( $careers_url ); ?>" target="_blank"><?php echo esc_html( get_the_title( $careers_page_id ) ); ?></a>
+                —
+                <a href="<?php echo esc_url( get_edit_post_link( $careers_page_id, 'raw' ) ); ?>"><?php esc_html_e( 'Edit page', 'career-portal' ); ?></a>
+            </p>
+            <?php endif; ?>
             <form method="post">
                 <?php wp_nonce_field('cp_save_settings','cp_settings_nonce'); ?>
                 <table class="form-table">

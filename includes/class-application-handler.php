@@ -30,13 +30,8 @@ class CP_Application_Handler {
             wp_send_json_error( array( 'message' => 'Invalid job listing.' ) );
         }
 
-        // Enforce application deadline (end of day, site timezone).
-        $deadline = get_post_meta( $job_id, '_cp_deadline', true );
-        if ( $deadline ) {
-            $deadline_ts = strtotime( $deadline . ' 23:59:59' );
-            if ( $deadline_ts && $deadline_ts < current_time( 'timestamp' ) ) {
-                wp_send_json_error( array( 'message' => 'The application deadline for this position has passed.' ) );
-            }
+        if ( CP_Deadline::is_expired( $job_id ) ) {
+            wp_send_json_error( array( 'message' => 'The application deadline for this position has passed.' ) );
         }
 
         $email = sanitize_email( $_POST['cp_email'] );

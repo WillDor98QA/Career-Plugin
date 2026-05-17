@@ -65,6 +65,11 @@ class CP_Shortcodes {
 
         $jobs = get_posts( $args );
 
+        // Do not list jobs past their application deadline.
+        $jobs = array_values( array_filter( $jobs, function( $job ) {
+            return ! CP_Deadline::is_expired( $job->ID );
+        } ) );
+
         ob_start();
         if ( empty( $jobs ) ) {
             echo '<div class="cp-no-jobs"><p>No open positions at the moment. Check back soon!</p></div>';
@@ -74,7 +79,7 @@ class CP_Shortcodes {
                 $location  = get_post_meta( $job->ID, '_cp_location',   true );
                 $type      = get_post_meta( $job->ID, '_cp_job_type',    true );
                 $salary    = get_post_meta( $job->ID, '_cp_salary',      true );
-                $deadline  = get_post_meta( $job->ID, '_cp_deadline',    true );
+                $deadline  = get_post_meta( $job->ID, CP_Deadline::META_KEY, true );
 
                 echo '<div class="cp-job-card">';
                 echo '<div class="cp-job-header">';
@@ -83,7 +88,9 @@ class CP_Shortcodes {
                 if ( $location ) echo '<span class="cp-meta-tag cp-location">📍 ' . esc_html($location) . '</span>';
                 if ( $type )     echo '<span class="cp-meta-tag cp-type">' . esc_html($type) . '</span>';
                 if ( $salary )   echo '<span class="cp-meta-tag cp-salary">💰 ' . esc_html($salary) . '</span>';
-                if ( $deadline ) echo '<span class="cp-meta-tag cp-deadline">⏰ Closes ' . esc_html( date_i18n('M j, Y', strtotime($deadline)) ) . '</span>';
+                if ( $deadline ) {
+                    echo '<span class="cp-meta-tag cp-deadline">⏰ Closes ' . esc_html( CP_Deadline::format_display( $deadline ) ) . '</span>';
+                }
                 echo '</div></div>';
 
                 $excerpt = wp_trim_words( $job->post_content, 30 );
@@ -120,6 +127,10 @@ class CP_Shortcodes {
         $job = get_post( $job_id );
         if ( ! $job || $job->post_type !== 'cp_job' || $job->post_status !== 'publish' ) {
             return '<p>This position is no longer accepting applications.</p>';
+        }
+
+        if ( CP_Deadline::is_expired( $job_id ) ) {
+            return $this->render_deadline_closed_message( $job );
         }
 
         self::$has_shortcode = true;
@@ -215,6 +226,27 @@ class CP_Shortcodes {
                     </button>
                 </div>
             </form>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    private function render_deadline_closed_message( $job ) {
+        self::$has_shortcode = true;
+        $deadline = get_post_meta( $job->ID, CP_Deadline::META_KEY, true );
+        $when     = $deadline ? CP_Deadline::format_display( $deadline ) : '';
+
+        ob_start();
+        ?>
+        <div class="cp-apply-form-wrap cp-apply-closed" id="cp-apply">
+            <h2 class="cp-form-title"><?php echo esc_html( $job->post_title ); ?></h2>
+            <div class="cp-alert cp-alert-error" style="display:block;">
+                <?php if ( $when ) : ?>
+                    <p><?php printf( esc_html__( 'Applications for this position closed on %s.', 'career-portal' ), esc_html( $when ) ); ?></p>
+                <?php else : ?>
+                    <p><?php esc_html_e( 'Applications for this position are no longer being accepted.', 'career-portal' ); ?></p>
+                <?php endif; ?>
+            </div>
         </div>
         <?php
         return ob_get_clean();

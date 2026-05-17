@@ -147,10 +147,23 @@ class CP_Email_Notifications {
         );
 
         add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
+        add_action( 'phpmailer_init', array( $this, 'configure_phpmailer_for_html' ) );
+
         $sent = wp_mail( $to, $subject, $body, $headers );
+
+        remove_action( 'phpmailer_init', array( $this, 'configure_phpmailer_for_html' ) );
         remove_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
 
         return $sent;
+    }
+
+    /**
+     * WP Mail SMTP and other plugins wrap PHPMailer — set HTML mode directly.
+     */
+    public function configure_phpmailer_for_html( $phpmailer ) {
+        $phpmailer->isHTML( true );
+        $phpmailer->ContentType = 'text/html';
+        $phpmailer->CharSet     = 'UTF-8';
     }
 
     /**

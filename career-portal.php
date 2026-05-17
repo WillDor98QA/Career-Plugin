@@ -17,12 +17,15 @@ define( 'CP_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 define( 'CP_UPLOAD_DIR',  WP_CONTENT_DIR . '/career-portal-uploads/' );
 define( 'CP_UPLOAD_URL',  WP_CONTENT_URL . '/career-portal-uploads/' );
 
+require_once CP_PLUGIN_DIR . 'includes/class-deadline.php';
 require_once CP_PLUGIN_DIR . 'includes/class-database.php';
 require_once CP_PLUGIN_DIR . 'includes/class-post-types.php';
 require_once CP_PLUGIN_DIR . 'includes/class-application-handler.php';
 require_once CP_PLUGIN_DIR . 'includes/class-email-notifications.php';
 require_once CP_PLUGIN_DIR . 'includes/class-shortcodes.php';
 require_once CP_PLUGIN_DIR . 'includes/class-nojs-handler.php';
+require_once CP_PLUGIN_DIR . 'includes/class-template-loader.php';
+require_once CP_PLUGIN_DIR . 'includes/class-setup.php';
 require_once CP_PLUGIN_DIR . 'admin/class-admin.php';
 
 function cp_init() {
@@ -32,6 +35,8 @@ function cp_init() {
     new CP_Shortcodes();
     new CP_Application_Handler();
     new CP_NoJS_Handler();
+    new CP_Template_Loader();
+    new CP_Setup();
     if ( is_admin() ) {
         new CP_Admin();
     }
@@ -66,6 +71,7 @@ function cp_activate() {
 
     // Register CPT so rewrite rules exist before flushing.
     CP_Post_Types::register_once();
+    CP_Setup::create_careers_page();
     flush_rewrite_rules();
 }
 register_activation_hook( __FILE__, 'cp_activate' );

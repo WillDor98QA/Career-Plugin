@@ -205,8 +205,50 @@
     border: 2px dashed #e0e0e0;
 }
 
+/* Single job (plugin template) */
+.cp-job-single-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.cp-job-single-header {
+    margin-bottom: 28px;
+}
+
+.cp-job-single-back {
+    margin: 0 0 12px;
+    font-size: 0.9em;
+}
+
+.cp-job-single-back a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.cp-job-single-title {
+    margin: 0 0 14px;
+    font-size: 2em;
+    color: #1a1a2e;
+}
+
+.cp-job-single-meta {
+    margin-bottom: 0;
+}
+
+.cp-job-single-content {
+    margin-bottom: 32px;
+    line-height: 1.7;
+    color: #444;
+}
+
+.cp-apply-closed .cp-form-title {
+    margin-bottom: 16px;
+}
+
 @media (max-width: 600px) {
     .cp-form-row.cp-two-col { grid-template-columns: 1fr; }
     .cp-apply-form-wrap { padding: 20px; }
     .cp-job-actions { flex-direction: column; }
+    .cp-job-single-title { font-size: 1.5em; }
 }

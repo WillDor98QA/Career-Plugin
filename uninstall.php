@@ -52,7 +52,7 @@ foreach ( $term_ids as $term_id ) {
 }
 
 // 4. Delete plugin options.
-$options = array( 'cp_admin_email', 'cp_db_version' );
+$options = array( 'cp_admin_email', 'cp_db_version', 'cp_careers_page_id', 'cp_setup_dismissed' );
 foreach ( $options as $option ) {
     delete_option( $option );
 }
