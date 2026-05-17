@@ -1,10 +1,11 @@
 <?php
 /**
- * Plugin Name: Career Portal
- * Plugin URI:  https://yoursite.com
- * Description: A fully custom careers page with job listings, applications, CV uploads, screening questions, portfolio links, email notifications, and an admin dashboard.
+ * Plugin Name: Jobbly
+ * Plugin URI:  https://william-six-zeta.vercel.app/
+ * Description: The complete hiring platform for WordPress — job listings, applications, CV uploads, screening questions, and built-in email.
  * Version:     1.0.0
- * Author:      Your Name
+ * Author:      William Dor
+ * Author URI:  https://william-six-zeta.vercel.app/
  * Text Domain: career-portal
  */
 
@@ -21,6 +22,7 @@ require_once CP_PLUGIN_DIR . 'includes/class-deadline.php';
 require_once CP_PLUGIN_DIR . 'includes/class-database.php';
 require_once CP_PLUGIN_DIR . 'includes/class-post-types.php';
 require_once CP_PLUGIN_DIR . 'includes/class-application-handler.php';
+require_once CP_PLUGIN_DIR . 'includes/class-mailer.php';
 require_once CP_PLUGIN_DIR . 'includes/class-email-notifications.php';
 require_once CP_PLUGIN_DIR . 'includes/class-shortcodes.php';
 require_once CP_PLUGIN_DIR . 'includes/class-nojs-handler.php';

@@ -1,4 +1,4 @@
-/* Career Portal — Admin Styles */
+/* Jobbly — Admin Styles */
 
 .cp-admin-wrap { max-width: 1200px; }
 
@@ -117,3 +117,23 @@
 
 .cp-status-current { font-size: 1.4em; font-weight: 700; margin-bottom: 12px; }
 .cp-status-note { font-size: 0.78em; color: #999; margin-top: 8px; }
+
+.cp-settings-form h2.title {
+    margin-top: 28px;
+    padding-top: 8px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.cp-settings-form h2.title:first-of-type {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.cp-mail-settings th {
+    width: 200px;
+}
+
+#cp-test-email-result {
+    font-weight: 500;
+}

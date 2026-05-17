@@ -68,7 +68,7 @@ class CP_Setup {
 
         ?>
         <div class="notice notice-info is-dismissible cp-setup-notice" data-cp-dismiss="setup">
-            <p><strong><?php esc_html_e( 'Career Portal is active', 'career-portal' ); ?></strong> — <?php esc_html_e( 'Complete these steps for a working careers site on any theme:', 'career-portal' ); ?></p>
+            <p><strong><?php esc_html_e( 'Jobbly is active', 'career-portal' ); ?></strong> — <?php esc_html_e( 'Complete these steps for a working careers site on any theme:', 'career-portal' ); ?></p>
             <ol style="margin-left:1.2em;list-style:decimal;">
                 <li>
                     <?php
@@ -94,7 +94,7 @@ class CP_Setup {
                     printf(
                         /* translators: %s: admin settings URL */
                         esc_html__( 'Set your notification email under %s.', 'career-portal' ),
-                        '<a href="' . esc_url( admin_url( 'admin.php?page=career-portal-settings' ) ) . '">Career Portal → Settings</a>'
+                        '<a href="' . esc_url( admin_url( 'admin.php?page=career-portal-settings' ) ) . '">Jobbly → Settings</a>'
                     );
                     if ( ! $admin_email ) {
                         echo ' <em>(' . esc_html__( 'recommended', 'career-portal' ) . ')</em>';

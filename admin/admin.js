@@ -87,4 +87,35 @@
         });
     });
 
+    // SMTP test email (Settings page)
+    $(document).on('click', '#cp-send-test-email', function() {
+        var $btn    = $(this);
+        var $result = $('#cp-test-email-result');
+        var email   = $('#cp_test_email').val();
+
+        if (!email) {
+            $result.css('color', '#b32d2e').text('Enter an email address.');
+            return;
+        }
+
+        $btn.prop('disabled', true);
+        $result.css('color', '#666').text('Sending…');
+
+        $.post(cpAdmin.ajaxUrl, {
+            action: 'cp_send_test_email',
+            email:  email,
+            nonce:  cpAdmin.nonce
+        }, function(res) {
+            if (res.success) {
+                $result.css('color', '#227a22').text(res.data.message || 'Sent!');
+            } else {
+                $result.css('color', '#b32d2e').text((res.data && res.data.message) || 'Failed to send.');
+            }
+        }).fail(function() {
+            $result.css('color', '#b32d2e').text('Could not reach the server.');
+        }).always(function() {
+            $btn.prop('disabled', false);
+        });
+    });
+
 })(jQuery);

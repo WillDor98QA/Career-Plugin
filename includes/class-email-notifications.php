@@ -4,10 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class CP_Email_Notifications {
 
     public function notify_admin( $application_id, $job ) {
-        $app      = CP_Database::get_application( $application_id );
-        $answers  = CP_Database::get_screening_answers( $application_id );
-        $admin_email = get_option( 'cp_admin_email', get_option('admin_email') );
-        $subject  = '[New Application] ' . $job->post_title . ' — ' . $app->full_name;
+        $app         = CP_Database::get_application( $application_id );
+        $answers     = CP_Database::get_screening_answers( $application_id );
+        $admin_email = get_option( 'cp_admin_email', get_option( 'admin_email' ) );
+        $subject     = '[New Application] ' . $job->post_title . ' — ' . $app->full_name;
 
         $cv_link = '';
         if ( $app->cv_file ) {
@@ -127,60 +127,18 @@ class CP_Email_Notifications {
     }
 
     /**
-     * Backup for plugins that read wp_mail_content_type instead of the header.
+     * Send via Jobbly's built-in SMTP mailer (not wp_mail / other plugins).
      */
-    public function set_html_content_type() {
-        return 'text/html; charset=UTF-8';
-    }
-
     private function send( $to, $subject, $body ) {
-        if ( ! is_email( $to ) ) return false;
+        $result = CP_Mailer::send( $to, $subject, $body );
 
-        $from_email = $this->resolve_from_email();
-        $from_name  = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
-
-        // Set Content-Type on the headers array directly — this is the most reliable
-        // way to get HTML rendering across core wp_mail, PHPMailer, and SMTP plugins.
-        $headers = array(
-            'Content-Type: text/html; charset=UTF-8',
-            'From: ' . $from_name . ' <' . $from_email . '>',
-        );
-
-        add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
-        add_action( 'phpmailer_init', array( $this, 'configure_phpmailer_for_html' ) );
-
-        $sent = wp_mail( $to, $subject, $body, $headers );
-
-        remove_action( 'phpmailer_init', array( $this, 'configure_phpmailer_for_html' ) );
-        remove_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
-
-        return $sent;
-    }
-
-    /**
-     * WP Mail SMTP and other plugins wrap PHPMailer — set HTML mode directly.
-     */
-    public function configure_phpmailer_for_html( $phpmailer ) {
-        $phpmailer->isHTML( true );
-        $phpmailer->ContentType = 'text/html';
-        $phpmailer->CharSet     = 'UTF-8';
-    }
-
-    /**
-     * Pick a From address that won't fail SPF/DMARC: prefer the configured
-     * notification address only if it shares the site domain, otherwise fall
-     * back to the WordPress admin email.
-     */
-    private function resolve_from_email() {
-        $candidate = get_option( 'cp_admin_email', get_option( 'admin_email' ) );
-        $site_host = wp_parse_url( home_url(), PHP_URL_HOST );
-
-        if ( $candidate && $site_host ) {
-            $candidate_host = substr( strrchr( $candidate, '@' ), 1 );
-            if ( $candidate_host && stripos( $site_host, $candidate_host ) !== false ) {
-                return $candidate;
+        if ( is_wp_error( $result ) ) {
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                error_log( 'Jobbly mail error: ' . $result->get_error_message() );
             }
+            return false;
         }
-        return get_option( 'admin_email' );
+
+        return true;
     }
 }

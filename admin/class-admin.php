@@ -7,12 +7,13 @@ class CP_Admin {
         add_action( 'admin_menu',           array( $this, 'register_menus' ) );
         add_action( 'admin_enqueue_scripts',array( $this, 'enqueue_assets' ) );
         add_action( 'wp_ajax_cp_update_status', array( $this, 'ajax_update_status' ) );
+        add_action( 'wp_ajax_cp_send_test_email', array( $this, 'ajax_send_test_email' ) );
         add_action( 'admin_post_cp_download_cv', array( $this, 'proxy_download' ) );
     }
 
     public function register_menus() {
         add_menu_page(
-            'Career Portal', 'Career Portal', 'manage_options',
+            'Jobbly', 'Jobbly', 'manage_options',
             'career-portal', array( $this, 'render_dashboard' ),
             'dashicons-groups', 25
         );
@@ -39,8 +40,10 @@ class CP_Admin {
         wp_enqueue_style( 'cp-admin', CP_PLUGIN_URL . 'admin/admin.css', array(), CP_VERSION );
         wp_enqueue_script( 'cp-admin', CP_PLUGIN_URL . 'admin/admin.js', array('jquery'), CP_VERSION, true );
         wp_localize_script( 'cp-admin', 'cpAdmin', array(
-            'nonce'   => wp_create_nonce('cp_admin_nonce'),
-            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'          => wp_create_nonce('cp_admin_nonce'),
+            'ajaxUrl'        => admin_url('admin-ajax.php'),
+            'isSettingsPage' => ( strpos( $hook, 'career-portal-settings' ) !== false ),
+            'mailConfigured' => CP_Mailer::is_configured(),
         ) );
     }
 
@@ -93,7 +96,7 @@ class CP_Admin {
         );
         ?>
         <div class="wrap cp-admin-wrap">
-            <h1 class="cp-admin-title">Career Portal <span class="cp-version">v<?php echo CP_VERSION; ?></span></h1>
+            <h1 class="cp-admin-title">Jobbly <span class="cp-version">v<?php echo CP_VERSION; ?></span></h1>
 
             <!-- Stats -->
             <div class="cp-stats-row">
@@ -268,16 +271,21 @@ class CP_Admin {
             wp_die( esc_html__( 'Unauthorized', 'career-portal' ) );
         }
 
-        if ( isset($_POST['cp_settings_nonce']) && wp_verify_nonce($_POST['cp_settings_nonce'], 'cp_save_settings') ) {
-            update_option( 'cp_admin_email', sanitize_email($_POST['cp_admin_email']) );
-            echo '<div class="notice notice-success"><p>Settings saved.</p></div>';
+        if ( isset( $_POST['cp_settings_nonce'] ) && wp_verify_nonce( $_POST['cp_settings_nonce'], 'cp_save_settings' ) ) {
+            update_option( 'cp_admin_email', sanitize_email( $_POST['cp_admin_email'] ?? '' ) );
+            CP_Mailer::save_from_post( $_POST );
+            echo '<div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>';
         }
-        $admin_email     = get_option( 'cp_admin_email', get_option('admin_email') );
+
+        $admin_email     = get_option( 'cp_admin_email', get_option( 'admin_email' ) );
+        $mail            = CP_Mailer::get_settings();
         $careers_page_id = (int) get_option( 'cp_careers_page_id', 0 );
         $careers_url     = $careers_page_id ? get_permalink( $careers_page_id ) : '';
+        $mail_ok         = CP_Mailer::is_configured();
         ?>
         <div class="wrap cp-admin-wrap">
-            <h1>Career Portal Settings</h1>
+            <h1>Jobbly Settings</h1>
+
             <?php if ( $careers_url ) : ?>
             <p>
                 <?php esc_html_e( 'Careers listing page:', 'career-portal' ); ?>
@@ -286,27 +294,134 @@ class CP_Admin {
                 <a href="<?php echo esc_url( get_edit_post_link( $careers_page_id, 'raw' ) ); ?>"><?php esc_html_e( 'Edit page', 'career-portal' ); ?></a>
             </p>
             <?php endif; ?>
-            <form method="post">
-                <?php wp_nonce_field('cp_save_settings','cp_settings_nonce'); ?>
+
+            <?php if ( ! $mail_ok ) : ?>
+            <div class="notice notice-warning"><p><strong>SMTP not configured.</strong> Application emails will not send until you enable and save SMTP settings below.</p></div>
+            <?php else : ?>
+            <div class="notice notice-success"><p><strong>SMTP is active.</strong> Jobbly sends all application emails through its own mailer (independent of WP Mail SMTP and other plugins).</p></div>
+            <?php endif; ?>
+
+            <form method="post" class="cp-settings-form">
+                <?php wp_nonce_field( 'cp_save_settings', 'cp_settings_nonce' ); ?>
+
+                <h2 class="title">Notifications</h2>
                 <table class="form-table">
                     <tr>
-                        <th><label for="cp_admin_email">Notification Email</label></th>
+                        <th><label for="cp_admin_email">Admin notification email</label></th>
                         <td>
-                            <input type="email" id="cp_admin_email" name="cp_admin_email" value="<?php echo esc_attr($admin_email); ?>" class="regular-text">
-                            <p class="description">Where to send new application notifications.</p>
+                            <input type="email" id="cp_admin_email" name="cp_admin_email" value="<?php echo esc_attr( $admin_email ); ?>" class="regular-text">
+                            <p class="description">Receives alerts when someone applies for a job.</p>
                         </td>
                     </tr>
                 </table>
-                <p><strong>Shortcodes</strong></p>
+
+                <h2 class="title">Mail server (SMTP)</h2>
+                <p class="description">Jobbly uses its own SMTP connection. You do not need WP Mail SMTP or another mail plugin.</p>
+
+                <table class="form-table cp-mail-settings">
+                    <tr>
+                        <th><label for="cp_mail_enabled">Enable SMTP</label></th>
+                        <td>
+                            <label><input type="checkbox" id="cp_mail_enabled" name="cp_mail_enabled" value="1" <?php checked( $mail['enabled'], '1' ); ?>> Use Jobbly SMTP for all plugin emails</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_host">SMTP host</label></th>
+                        <td>
+                            <input type="text" id="cp_mail_host" name="cp_mail_host" value="<?php echo esc_attr( $mail['host'] ); ?>" class="regular-text" placeholder="smtp.gmail.com">
+                            <p class="description">Examples: <code>smtp.gmail.com</code>, <code>smtp.office365.com</code>, <code>mail.yourdomain.com</code></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_port">SMTP port</label></th>
+                        <td>
+                            <input type="number" id="cp_mail_port" name="cp_mail_port" value="<?php echo esc_attr( $mail['port'] ); ?>" class="small-text" min="1" max="65535">
+                            <p class="description">Usually <code>587</code> (TLS) or <code>465</code> (SSL).</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_encryption">Encryption</label></th>
+                        <td>
+                            <select id="cp_mail_encryption" name="cp_mail_encryption">
+                                <option value="tls" <?php selected( $mail['encryption'], 'tls' ); ?>>TLS (recommended)</option>
+                                <option value="ssl" <?php selected( $mail['encryption'], 'ssl' ); ?>>SSL</option>
+                                <option value="none" <?php selected( $mail['encryption'], 'none' ); ?>>None</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Authentication</th>
+                        <td>
+                            <label><input type="checkbox" name="cp_mail_auth" value="1" <?php checked( $mail['auth'], '1' ); ?>> SMTP authentication required</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_username">Username</label></th>
+                        <td><input type="text" id="cp_mail_username" name="cp_mail_username" value="<?php echo esc_attr( $mail['username'] ); ?>" class="regular-text" autocomplete="off"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_password">Password</label></th>
+                        <td>
+                            <input type="password" id="cp_mail_password" name="cp_mail_password" value="" class="regular-text" autocomplete="new-password" placeholder="<?php echo $mail['password'] ? '•••••••• (unchanged)' : ''; ?>">
+                            <p class="description">Leave blank to keep the current password. For Gmail, use an <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener">App Password</a>.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_from_email">From email</label></th>
+                        <td>
+                            <input type="email" id="cp_mail_from_email" name="cp_mail_from_email" value="<?php echo esc_attr( $mail['from_email'] ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
+                            <p class="description">Must be allowed by your mail provider (often must match the SMTP account).</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="cp_mail_from_name">From name</label></th>
+                        <td>
+                            <input type="text" id="cp_mail_from_name" name="cp_mail_from_name" value="<?php echo esc_attr( $mail['from_name'] ); ?>" class="regular-text" placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>">
+                        </td>
+                    </tr>
+                </table>
+
+                <p>
+                    <label for="cp_test_email">Send test email to:</label>
+                    <input type="email" id="cp_test_email" class="regular-text" value="<?php echo esc_attr( $admin_email ); ?>" style="margin-left:8px;">
+                    <button type="button" class="button" id="cp-send-test-email">Send test email</button>
+                    <span id="cp-test-email-result" style="margin-left:10px;"></span>
+                </p>
+                <p class="description">Save settings first, then send a test. The test uses Jobbly SMTP only.</p>
+
+                <h2 class="title">Shortcodes</h2>
                 <table class="widefat" style="max-width:600px;">
                     <tr><td><code>[career_listings]</code></td><td>Shows all open job listings</td></tr>
                     <tr><td><code>[career_apply]</code></td><td>Shows application form on a single job page</td></tr>
                     <tr><td><code>[career_listings department="design"]</code></td><td>Filter by department slug</td></tr>
                 </table>
-                <?php submit_button('Save Settings'); ?>
+
+                <?php submit_button( 'Save Settings' ); ?>
             </form>
         </div>
         <?php
+    }
+
+    public function ajax_send_test_email() {
+        if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'cp_admin_nonce' ) ) {
+            wp_send_json_error( array( 'message' => 'Unauthorized' ) );
+        }
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => 'Unauthorized' ) );
+        }
+
+        $to = sanitize_email( $_POST['email'] ?? '' );
+        if ( ! is_email( $to ) ) {
+            wp_send_json_error( array( 'message' => 'Enter a valid email address.' ) );
+        }
+
+        $result = CP_Mailer::send_test( $to );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+        }
+
+        wp_send_json_success( array( 'message' => 'Test email sent to ' . $to . '. Check your inbox.' ) );
     }
 
     public function ajax_update_status() {

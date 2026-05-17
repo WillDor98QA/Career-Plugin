@@ -1,6 +1,6 @@
 <?php
 /**
- * Career Portal — uninstall cleanup.
+ * Jobbly — uninstall cleanup.
  *
  * Runs only when the user deletes the plugin from the WordPress admin (NOT on
  * simple deactivate). Removes the plugin's custom tables, posts, taxonomy
@@ -52,7 +52,7 @@ foreach ( $term_ids as $term_id ) {
 }
 
 // 4. Delete plugin options.
-$options = array( 'cp_admin_email', 'cp_db_version', 'cp_careers_page_id', 'cp_setup_dismissed' );
+$options = array( 'cp_admin_email', 'cp_db_version', 'cp_careers_page_id', 'cp_setup_dismissed', 'cp_mail_settings' );
 foreach ( $options as $option ) {
     delete_option( $option );
 }

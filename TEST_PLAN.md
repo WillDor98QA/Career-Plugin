@@ -1,6 +1,6 @@
-# Career Portal — Comprehensive QA Test Plan
+# Jobbly — Comprehensive QA Test Plan
 
-**Plugin under test:** Career Portal (WordPress)
+**Plugin under test:** Jobbly (WordPress)
 **Author:** Senior QA Engineer
 **Last updated:** 2026-05-16
 
@@ -12,9 +12,9 @@ Test IDs follow the pattern `CP-<AREA>-<NUM>` (e.g., `CP-04B-17`). All severity 
 
 | ID | Area | Type | Title | Preconditions | Steps | Expected Result | Severity if Fail |
 |----|------|------|-------|---------------|-------|-----------------|------------------|
-| CP-01-01 | Activation | POSITIVE | Fresh activation creates tables, upload dir, protection files | Clean WP install, plugin uploaded but not yet activated | 1. Plugins → Activate "Career Portal". 2. In phpMyAdmin verify `wp_cp_applications` and `wp_cp_screening_answers` exist with correct schema. 3. Check `wp-content/career-portal-uploads/` exists. 4. Confirm `.htaccess` (with `Deny from all` / `Require all denied`) and `index.php` stub inside the dir. 5. Visit a permalink — should not 404 (rewrite rules flushed). | Both tables created with all columns/indexes; upload dir present with both protection files; pretty permalinks for `cp_job` work without manual flush. | P0-Critical |
+| CP-01-01 | Activation | POSITIVE | Fresh activation creates tables, upload dir, protection files | Clean WP install, plugin uploaded but not yet activated | 1. Plugins → Activate "Jobbly". 2. In phpMyAdmin verify `wp_cp_applications` and `wp_cp_screening_answers` exist with correct schema. 3. Check `wp-content/career-portal-uploads/` exists. 4. Confirm `.htaccess` (with `Deny from all` / `Require all denied`) and `index.php` stub inside the dir. 5. Visit a permalink — should not 404 (rewrite rules flushed). | Both tables created with all columns/indexes; upload dir present with both protection files; pretty permalinks for `cp_job` work without manual flush. | P0-Critical |
 | CP-01-02 | Activation | EDGE | Re-activation is idempotent | Plugin currently active with ≥1 job and ≥1 application | 1. Deactivate plugin. 2. Reactivate plugin. 3. Inspect DB schema. 4. Check application data. | Tables not duplicated, no `ALTER TABLE` errors in debug log, all existing rows intact, dbDelta runs cleanly. | P0-Critical |
-| CP-01-03 | Activation | POSITIVE | Deactivation preserves data, hides CPT/shortcodes | Plugin active with jobs + applications | 1. Plugins → Deactivate. 2. Confirm "Career Portal" menu removed. 3. Verify `wp_cp_applications` / `wp_cp_screening_answers` still in DB. 4. Load a page containing `[career_listings]` and `[career_apply]`. | Data persists; CPT menu gone; shortcodes return empty string (no fatal, no raw `[shortcode]` text). | P1-High |
+| CP-01-03 | Activation | POSITIVE | Deactivation preserves data, hides CPT/shortcodes | Plugin active with jobs + applications | 1. Plugins → Deactivate. 2. Confirm "Jobbly" menu removed. 3. Verify `wp_cp_applications` / `wp_cp_screening_answers` still in DB. 4. Load a page containing `[career_listings]` and `[career_apply]`. | Data persists; CPT menu gone; shortcodes return empty string (no fatal, no raw `[shortcode]` text). | P1-High |
 | CP-01-04 | Activation | POSITIVE | Uninstall removes plugin data but keeps CV files | Plugin installed with data; CVs in upload dir | 1. Deactivate plugin. 2. Delete plugin via WP UI (triggers `uninstall.php`). 3. Inspect DB and filesystem. | Both custom tables dropped; all `cp_job` posts + postmeta deleted; `cp_admin_email` and any `cp_*` options removed; `career-portal-uploads/` directory **and CV files inside it remain**. | P0-Critical |
 | CP-01-05 | Activation | EDGE | Plain permalinks gracefully degrade | Settings → Permalinks set to "Plain" | 1. Set permalinks to Plain. 2. Activate plugin. 3. View a job. | No fatal; admin notice shown explaining permalink requirement OR job URLs use `?p=` form without 404. | P2-Medium |
 | CP-01-06 | Environment | ENVIRONMENT | PHP 7.4 activation | Server running PHP 7.4 | 1. Activate plugin. 2. Create + view a job. 3. Submit an application. 4. Tail `debug.log`. | No `Parse error`, no `syntax error`, no warnings about unsupported syntax. | P0-Critical |
@@ -29,7 +29,7 @@ Test IDs follow the pattern `CP-<AREA>-<NUM>` (e.g., `CP-04B-17`). All severity 
 
 | ID | Area | Type | Title | Preconditions | Steps | Expected Result | Severity if Fail |
 |----|------|------|-------|---------------|-------|-----------------|------------------|
-| CP-02-01 | Jobs Admin | POSITIVE | Create fully-populated job | Logged in as Administrator | 1. Career Portal → Add Job. 2. Fill title, content, location "Accra", type "Full-time", salary "GHS 8,000", deadline +30d, 3 screening questions, portfolio required = on. 3. Publish. 4. View on frontend. | Post saved; all metaboxes show on edit reload; frontend card shows all tags; apply form lists 3 screening questions + requires portfolio. | P0-Critical |
+| CP-02-01 | Jobs Admin | POSITIVE | Create fully-populated job | Logged in as Administrator | 1. Jobbly → Add Job. 2. Fill title, content, location "Accra", type "Full-time", salary "GHS 8,000", deadline +30d, 3 screening questions, portfolio required = on. 3. Publish. 4. View on frontend. | Post saved; all metaboxes show on edit reload; frontend card shows all tags; apply form lists 3 screening questions + requires portfolio. | P0-Critical |
 | CP-02-02 | Jobs Admin | EDGE | Minimal job (title only) | — | 1. Create job with only title. 2. Publish. 3. View `[career_listings]` page. | Card renders with title and Apply/View buttons only; no `(empty)` or `0` placeholders; meta row hidden. | P1-High |
 | CP-02-03 | Jobs Admin | POSITIVE | Job with zero screening questions | — | 1. Create job, leave screening questions empty. 2. Publish. 3. Visit apply page. | Apply form renders standard fields; no "Screening Questions" heading shown. | P1-High |
 | CP-02-04 | Jobs Admin | POSITIVE | Portfolio NOT required | — | 1. Create job with portfolio toggle off. 2. Apply with portfolio field blank. | Submission accepted. | P1-High |
@@ -156,7 +156,7 @@ Test IDs follow the pattern `CP-<AREA>-<NUM>` (e.g., `CP-04B-17`). All severity 
 
 | ID | Area | Type | Title | Preconditions | Steps | Expected Result | Severity if Fail |
 |----|------|------|-------|---------------|-------|-----------------|------------------|
-| CP-05A-01 | Dashboard | POSITIVE | Zero applications empty state | No rows in `wp_cp_applications` | 1. Open Career Portal → Applications. | Empty state ("No applications yet"), no PHP notice. | P1-High |
+| CP-05A-01 | Dashboard | POSITIVE | Zero applications empty state | No rows in `wp_cp_applications` | 1. Open Jobbly → Applications. | Empty state ("No applications yet"), no PHP notice. | P1-High |
 | CP-05A-02 | Dashboard | POSITIVE | One application | 1 application | 1. Open dashboard. | Single row renders with name, email, position, status badge, date, Download CV. | P0-Critical |
 | CP-05A-03 | Dashboard | POSITIVE | Pagination at 21+ | 21 applications | 1. Open dashboard. 2. Click page 2. | Pagination control visible; page 2 loads 1 record; query uses `LIMIT/OFFSET`. | P1-High |
 | CP-05A-04 | Dashboard | POSITIVE | Filter by job | Multiple jobs with apps | 1. Pick job in dropdown. 2. Submit. | Only that job's applications. URL contains `?job_id=…`. | P1-High |
