@@ -1,0 +1,11 @@
+.git
+.gitignore
+.distignore
+.DS_Store
+**/.DS_Store
+.cursor
+TEST_PLAN.md
+*.zip
+build-release.sh
+jobbly.zip
+qadwilliam-jobs-apply.zip

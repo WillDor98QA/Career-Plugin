@@ -3,7 +3,7 @@
 
     $(document).ready(function() {
 
-        // Multiple [career_apply] shortcodes may render on the same page, so iterate
+        // Multiple [qwja_apply] shortcodes may render on the same page, so iterate
         // and scope every jQuery lookup to its own form.
         $('.cp-application-form').each(function() {
             initForm($(this));
@@ -48,14 +48,14 @@
                 isSubmitting = true;
 
                 var formData = new FormData($form[0]);
-                formData.set('cp_nonce', cpAjax.nonce);
+                formData.set('qwja_nonce', qwjaAjax.nonce);
 
                 $submit.prop('disabled', true);
                 $submit.find('.cp-btn-text').hide();
                 $submit.find('.cp-btn-loading').show();
 
                 $.ajax({
-                    url:         cpAjax.url,
+                    url:         qwjaAjax.url,
                     type:        'POST',
                     data:        formData,
                     processData: false,
@@ -75,9 +75,51 @@
                             $submit.find('.cp-btn-loading').hide();
                         }
                     },
-                    error: function() {
+                    error: function(xhr) {
                         isSubmitting = false;
-                        $error.text('Network error. Please check your connection and try again.').show();
+
+                        var message = 'Something went wrong. Please try again.';
+                        var parsed  = null;
+                        var raw     = xhr && xhr.responseText ? xhr.responseText.trim() : '';
+
+                        if (raw) {
+                            try {
+                                parsed = JSON.parse(raw);
+                            } catch (ignore) {
+                                parsed = null;
+                            }
+                        }
+
+                        if (parsed && parsed.data && parsed.data.message) {
+                            message = parsed.data.message;
+                        } else if (xhr && xhr.status === 0) {
+                            message = 'Network error. Please check your connection and try again.';
+                        } else if (xhr && xhr.status >= 500) {
+                            message = 'Server error (' + xhr.status + '). Please try again, or contact the site administrator if this keeps happening.';
+                            if (typeof qwjaAjax !== 'undefined' && qwjaAjax.debug) {
+                                var fatal = raw.match(/Fatal error:[^\n<]{0,400}/i)
+                                    || raw.match(/Uncaught [^\n<]{0,400}/i)
+                                    || raw.match(/PHP (Parse|Fatal) error[^\n<]{0,400}/i);
+                                if (fatal && fatal[0]) {
+                                    message += ' ' + fatal[0].trim().slice(0, 280);
+                                }
+                            }
+                        } else if (xhr && xhr.status === 413) {
+                            message = 'Your CV is too large for the server to accept. Please upload a smaller file.';
+                        }
+
+                        if (window.console && console.error) {
+                            console.error('Qadwilliam Jobs & Apply submission failed', {
+                                status:       xhr && xhr.status,
+                                statusText:   xhr && xhr.statusText,
+                                responseText: raw ? raw.slice(0, 8000) : ''
+                            });
+                        }
+
+                        $error.text(message).show();
+                        if ($error.offset()) {
+                            $('html, body').animate({ scrollTop: $error.offset().top - 40 }, 300);
+                        }
                         $submit.prop('disabled', false);
                         $submit.find('.cp-btn-text').show();
                         $submit.find('.cp-btn-loading').hide();

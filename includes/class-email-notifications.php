@@ -1,17 +1,20 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-class CP_Email_Notifications {
+class QWJA_Email_Notifications {
 
     public function notify_admin( $application_id, $job ) {
-        $app         = CP_Database::get_application( $application_id );
-        $answers     = CP_Database::get_screening_answers( $application_id );
-        $admin_email = get_option( 'cp_admin_email', get_option( 'admin_email' ) );
+        $app = QWJA_Database::get_application( $application_id );
+        if ( ! $app || ! $job ) {
+            return;
+        }
+        $answers     = QWJA_Database::get_screening_answers( $application_id );
+        $admin_email = get_option( 'qwja_admin_email', get_option( 'admin_email' ) );
         $subject     = '[New Application] ' . $job->post_title . ' — ' . $app->full_name;
 
         $cv_link = '';
         if ( $app->cv_file ) {
-            $cv_link = '<p><strong>CV:</strong> <a href="' . esc_url( admin_url( 'admin-post.php?action=cp_download_cv&id=' . $application_id . '&_wpnonce=' . wp_create_nonce('cp_download_cv') ) ) . '">Download CV</a></p>';
+            $cv_link = '<p><strong>CV:</strong> <a href="' . esc_url( admin_url( 'admin-post.php?action=qwja_download_cv&id=' . $application_id . '&_wpnonce=' . wp_create_nonce('qwja_download_cv') ) ) . '">Download CV</a></p>';
         }
 
         $screening_html = '';
@@ -35,14 +38,17 @@ class CP_Email_Notifications {
             ' . ( $app->cover_letter ? '<h3 style="color:#333;border-bottom:1px solid #eee;padding-bottom:8px;">Cover Letter</h3><p>' . nl2br(esc_html($app->cover_letter)) . '</p>' : '' ) . '
             ' . $screening_html . '
             ' . $cv_link . '
-            <p style="margin-top:24px;"><a href="' . esc_url( admin_url('admin.php?page=career-portal&action=view&id=' . $application_id) ) . '" style="background:#0073aa;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;">View in Dashboard</a></p>
+            <p style="margin-top:24px;"><a href="' . esc_url( admin_url('admin.php?page=qadwilliam-jobs-apply&action=view&id=' . $application_id) ) . '" style="background:#0073aa;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;">View in Dashboard</a></p>
         ' );
 
         $this->send( $admin_email, $subject, $body );
     }
 
     public function notify_applicant( $application_id, $job ) {
-        $app     = CP_Database::get_application( $application_id );
+        $app = QWJA_Database::get_application( $application_id );
+        if ( ! $app || ! $job ) {
+            return;
+        }
         $subject = 'We received your application — ' . $job->post_title;
         $company = get_bloginfo('name');
 
@@ -63,7 +69,7 @@ class CP_Email_Notifications {
     }
 
     public function notify_status_change( $application_id, $new_status ) {
-        $app  = CP_Database::get_application( $application_id );
+        $app  = QWJA_Database::get_application( $application_id );
         if ( ! $app ) return;
         $job  = get_post( $app->job_id );
 
@@ -118,7 +124,7 @@ class CP_Email_Notifications {
                         </td></tr>
                         <tr><td style="padding:30px;color:#333;font-size:15px;line-height:1.6;">' . $content . '</td></tr>
                         <tr><td style="background:#f8f9fa;padding:16px 30px;text-align:center;font-size:12px;color:#999;">
-                            &copy; ' . date('Y') . ' <a href="' . esc_url($url) . '" style="color:#0073aa;">' . esc_html($company) . '</a>
+                            &copy; ' . gmdate('Y') . ' <a href="' . esc_url($url) . '" style="color:#0073aa;">' . esc_html($company) . '</a>
                         </td></tr>
                     </table>
                 </td></tr>
@@ -127,14 +133,14 @@ class CP_Email_Notifications {
     }
 
     /**
-     * Send via Jobbly's built-in SMTP mailer (not wp_mail / other plugins).
+     * Send via Qadwilliam Jobs & Apply's built-in SMTP mailer (not wp_mail / other plugins).
      */
     private function send( $to, $subject, $body ) {
-        $result = CP_Mailer::send( $to, $subject, $body );
+        $result = QWJA_Mailer::send( $to, $subject, $body );
 
         if ( is_wp_error( $result ) ) {
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-                error_log( 'Jobbly mail error: ' . $result->get_error_message() );
+                error_log( 'Qadwilliam Jobs & Apply mail error: ' . $result->get_error_message() );
             }
             return false;
         }

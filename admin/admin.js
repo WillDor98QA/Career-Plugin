@@ -49,11 +49,11 @@
             return;
         }
 
-        $.post(cpAdmin.ajaxUrl, {
-            action: 'cp_update_status',
+        $.post(qwjaAdmin.ajaxUrl, {
+            action: 'qwja_update_status',
             id:     id,
             status: status,
-            nonce:  cpAdmin.nonce
+            nonce:  qwjaAdmin.nonce
         }, function(res) {
             if ( res.success ) {
                 $sel.data('prev', status);
@@ -91,7 +91,7 @@
     $(document).on('click', '#cp-send-test-email', function() {
         var $btn    = $(this);
         var $result = $('#cp-test-email-result');
-        var email   = $('#cp_test_email').val();
+        var email   = $('#qwja_test_email').val();
 
         if (!email) {
             $result.css('color', '#b32d2e').text('Enter an email address.');
@@ -101,10 +101,10 @@
         $btn.prop('disabled', true);
         $result.css('color', '#666').text('Sending…');
 
-        $.post(cpAdmin.ajaxUrl, {
-            action: 'cp_send_test_email',
+        $.post(qwjaAdmin.ajaxUrl, {
+            action: 'qwja_send_test_email',
             email:  email,
-            nonce:  cpAdmin.nonce
+            nonce:  qwjaAdmin.nonce
         }, function(res) {
             if (res.success) {
                 $result.css('color', '#227a22').text(res.data.message || 'Sent!');

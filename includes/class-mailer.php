@@ -2,12 +2,12 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * Jobbly's own SMTP mailer — sends via PHPMailer directly so other
+ * Qadwilliam Jobs & Apply's own SMTP mailer — sends via PHPMailer directly so other
  * mail plugins (WP Mail SMTP, etc.) are not involved.
  */
-class CP_Mailer {
+class QWJA_Mailer {
 
-    const OPTION_KEY = 'cp_mail_settings';
+    const OPTION_KEY = 'qwja_mail_settings';
 
     /**
      * Default settings structure.
@@ -48,17 +48,17 @@ class CP_Mailer {
         $current = self::get_settings();
 
         $settings = array(
-            'enabled'    => ! empty( $post['cp_mail_enabled'] ) ? '1' : '0',
-            'host'       => sanitize_text_field( $post['cp_mail_host'] ?? '' ),
-            'port'       => absint( $post['cp_mail_port'] ?? 587 ) ?: 587,
-            'encryption' => self::sanitize_encryption( $post['cp_mail_encryption'] ?? 'tls' ),
-            'auth'       => ! empty( $post['cp_mail_auth'] ) ? '1' : '0',
-            'username'   => sanitize_text_field( $post['cp_mail_username'] ?? '' ),
-            'from_email' => sanitize_email( $post['cp_mail_from_email'] ?? '' ),
-            'from_name'  => sanitize_text_field( $post['cp_mail_from_name'] ?? '' ),
+            'enabled'    => ! empty( $post['qwja_mail_enabled'] ) ? '1' : '0',
+            'host'       => sanitize_text_field( $post['qwja_mail_host'] ?? '' ),
+            'port'       => absint( $post['qwja_mail_port'] ?? 587 ) ?: 587,
+            'encryption' => self::sanitize_encryption( $post['qwja_mail_encryption'] ?? 'tls' ),
+            'auth'       => ! empty( $post['qwja_mail_auth'] ) ? '1' : '0',
+            'username'   => sanitize_text_field( $post['qwja_mail_username'] ?? '' ),
+            'from_email' => sanitize_email( $post['qwja_mail_from_email'] ?? '' ),
+            'from_name'  => sanitize_text_field( $post['qwja_mail_from_name'] ?? '' ),
         );
 
-        $new_password = isset( $post['cp_mail_password'] ) ? (string) wp_unslash( $post['cp_mail_password'] ) : '';
+        $new_password = isset( $post['qwja_mail_password'] ) ? (string) wp_unslash( $post['qwja_mail_password'] ) : '';
         if ( $new_password !== '' ) {
             $settings['password'] = self::encrypt_password( $new_password );
         } else {
@@ -81,13 +81,13 @@ class CP_Mailer {
      */
     public static function send( $to, $subject, $html_body ) {
         if ( ! is_email( $to ) ) {
-            return new WP_Error( 'cp_mail_invalid_to', 'Invalid recipient email address.' );
+            return new WP_Error( 'qwja_mail_invalid_to', 'Invalid recipient email address.' );
         }
 
         if ( ! self::is_configured() ) {
             return new WP_Error(
-                'cp_mail_not_configured',
-                'Jobbly mail is not configured. Go to Jobbly → Settings and set up SMTP.'
+                'qwja_mail_not_configured',
+                'Qadwilliam Jobs & Apply mail is not configured. Go to Qadwilliam Jobs & Apply → Settings and set up SMTP.'
             );
         }
 
@@ -113,7 +113,7 @@ class CP_Mailer {
             $mail->send();
             return true;
         } catch ( Exception $e ) {
-            return new WP_Error( 'cp_mail_send_failed', $e->getMessage() );
+            return new WP_Error( 'qwja_mail_send_failed', $e->getMessage() );
         }
     }
 
@@ -125,14 +125,14 @@ class CP_Mailer {
     public static function send_test( $to ) {
         $site = get_bloginfo( 'name' );
         $body = '<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;padding:24px;">
-            <h2 style="color:#0073aa;">Jobbly — Test Email</h2>
-            <p>If you are reading this, your Jobbly SMTP settings are working correctly.</p>
+            <h2 style="color:#0073aa;">Qadwilliam Jobs & Apply — Test Email</h2>
+            <p>If you are reading this, your Qadwilliam Jobs & Apply SMTP settings are working correctly.</p>
             <p style="color:#666;font-size:13px;">Sent from <strong>' . esc_html( $site ) . '</strong> at ' . esc_html( current_time( 'mysql' ) ) . '</p>
         </body></html>';
 
         return self::send(
             $to,
-            '[' . $site . '] Jobbly SMTP test',
+            '[' . $site . '] Qadwilliam Jobs & Apply SMTP test',
             $body
         );
     }

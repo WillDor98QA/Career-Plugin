@@ -4,9 +4,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Application deadline parsing, display, and expiry checks (site timezone).
  */
-class CP_Deadline {
+class QWJA_Deadline {
 
-    const META_KEY = '_cp_deadline';
+    const META_KEY = '_qwja_deadline';
 
     /**
      * Whether the job's application window has closed.

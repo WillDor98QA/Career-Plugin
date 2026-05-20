@@ -1,9 +1,9 @@
-=== Jobbly ===
-Contributors: william-dor
-Tags: careers, jobs, recruitment, hiring, applications
+=== Qadwilliam Jobs & Apply ===
+Contributors: qadwilliam
+Tags: careers, jobs, recruitment, hiring, applications, job board
 Requires at least: 6.0
-Tested up to: 6.8
-Stable tag: 1.0.0
+Tested up to: 6.9
+Stable tag: 1.0.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ The complete hiring platform for WordPress — listings, applications, CV upload
 
 == Description ==
 
-Jobbly is the complete hiring platform for WordPress. Publish job openings, collect applications with CV uploads and custom screening questions, and manage every applicant from a dedicated admin dashboard — without relying on third-party job boards or external mail plugins.
+Qadwilliam Jobs & Apply is the complete hiring platform for WordPress. Publish job openings, collect applications with CV uploads and custom screening questions, and manage every applicant from a dedicated admin dashboard — without relying on third-party job boards or external mail plugins.
 
 **For site owners**
 
@@ -31,8 +31,8 @@ Jobbly is the complete hiring platform for WordPress. Publish job openings, coll
 
 **Shortcodes**
 
-* `[career_listings]` — displays all open job listings (optional `department="slug"` filter).
-* `[career_apply]` — displays the application form on a job page or with `job_id="123"`.
+* `[qwja_listings]` — displays all open job listings (optional `department="slug"` filter).
+* `[qwja_apply]` — displays the application form on a job page or with `job_id="123"`.
 
 **Built-in safeguards**
 
@@ -43,33 +43,33 @@ Jobbly is the complete hiring platform for WordPress. Publish job openings, coll
 
 == Installation ==
 
-1. Upload the `career-portal` folder to `/wp-content/plugins/`, or install through the WordPress Plugins screen.
-2. Activate **Jobbly** through the **Plugins** menu.
+1. Upload the `qadwilliam-jobs-apply` folder to `/wp-content/plugins/`, or install through the WordPress Plugins screen.
+2. Activate **Qadwilliam Jobs & Apply** through the **Plugins** menu.
 3. Go to **Settings → Permalinks** and click **Save Changes** once (registers job URLs).
-4. Open **Jobbly → Settings** and:
+4. Open **Qadwilliam Jobs & Apply → Settings** and:
    * Set the admin notification email.
    * Enable SMTP and enter your mail server details.
    * Save, then use **Send test email** to confirm delivery.
-5. Visit **Jobbly → Job Listings** (or **Add New Job**) to publish your first position.
-6. A **Careers** page with `[career_listings]` is created automatically on activation. Add `[career_apply]` to job content or rely on the plugin’s single-job template.
+5. Visit **Qadwilliam Jobs & Apply → Job Listings** (or **Add New Job**) to publish your first position.
+6. A **Careers** page with `[qwja_listings]` is created automatically on activation. Add `[qwja_apply]` to job content or rely on the plugin’s single-job template.
 
 == Frequently Asked Questions ==
 
 = Does this plugin require WP Mail SMTP or another mail plugin? =
 
-No. Jobbly includes its own SMTP configuration under **Jobbly → Settings**. All application-related emails are sent through the plugin’s mailer. Other WordPress emails are unaffected.
+No. Qadwilliam Jobs & Apply includes its own SMTP configuration under **Qadwilliam Jobs & Apply → Settings**. All application-related emails are sent through the plugin’s mailer. Other WordPress emails are unaffected.
 
 = Where are uploaded CVs stored? =
 
-Files are saved in `wp-content/career-portal-uploads/`. Direct web access is blocked via `.htaccess` and `index.php`. Admins download CVs through the dashboard only.
+Files are saved in `wp-content/uploads/qadwilliam-jobs-apply/`. Direct web access is blocked via `.htaccess` and an empty `index.html`. Admins download CVs through the dashboard only.
 
 = Can I use my theme’s design for the careers page? =
 
-Yes. The plugin works with any theme. Use the shortcodes on any page, or add `single-cp_job.php` in your theme to override the default job detail layout. If your theme does not provide that template, the plugin supplies one automatically.
+Yes. The plugin works with any theme. Use the shortcodes on any page, or add `single-qwja_job.php` in your theme to override the default job detail layout. If your theme does not provide that template, the plugin supplies one automatically.
 
 = What happens when an application deadline passes? =
 
-The job is removed from `[career_listings]`, the apply form is replaced with a closed message, and new submissions are rejected on the server.
+The job is removed from `[qwja_listings]`, the apply form is replaced with a closed message, and new submissions are rejected on the server.
 
 = Can applicants apply to the same job more than once? =
 
@@ -81,26 +81,26 @@ Pending, Reviewing, Interview, Hired, and Rejected. Changing status in the admin
 
 = Is data removed when I uninstall the plugin? =
 
-Uninstalling deletes custom database tables, job posts, department terms, and plugin options. Uploaded CV files in `wp-content/career-portal-uploads/` are **not** deleted automatically so you can retain records if needed; remove that folder manually for a full purge.
+Uninstalling deletes custom database tables, job posts, department terms, and plugin options. Uploaded CV files in `wp-content/uploads/qadwilliam-jobs-apply/` are **not** deleted automatically so you can retain records if needed; remove that folder manually for a full purge.
 
 == Screenshots ==
 
 1. Job listings on the frontend careers page.
 2. Single job page with application form.
-3. Jobbly applications dashboard with filters and status controls.
+3. Qadwilliam Jobs & Apply applications dashboard with filters and status controls.
 4. Job editor with details, deadline, and screening questions.
 5. Settings page with built-in SMTP configuration.
 
 == Changelog ==
 
 = 1.0.0 =
-* Initial release of Jobbly.
+* Initial release of Qadwilliam Jobs & Apply.
 * Job listings custom post type and Departments taxonomy.
 * Application form with CV upload, portfolio link, cover letter, and screening questions.
 * Admin dashboard for applications with status management and CV download.
 * Built-in SMTP mailer with test email.
 * HTML email notifications for new applications, confirmations, and status changes.
-* Shortcodes `[career_listings]` and `[career_apply]`.
+* Shortcodes `[qwja_listings]` and `[qwja_apply]`.
 * Application deadlines with date and time (site timezone).
 * Automatic Careers page creation and setup guidance on activation.
 * Default single-job template when the theme does not provide one.
@@ -108,4 +108,4 @@ Uninstalling deletes custom database tables, job posts, department terms, and pl
 == Upgrade Notice ==
 
 = 1.0.0 =
-Initial release of Jobbly — the complete hiring platform for WordPress.
+Initial release of Qadwilliam Jobs & Apply — the complete hiring platform for WordPress.

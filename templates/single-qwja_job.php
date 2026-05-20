@@ -1,6 +1,6 @@
 <?php
 /**
- * Default single job template (used when the theme has no single-cp_job.php).
+ * Default single job template (used when the theme has no single-qwja_job.php).
  *
  * @package Career_Portal
  */
@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'CP_RENDERING_JOB_TEMPLATE', true );
+define( 'QWJA_RENDERING_JOB_TEMPLATE', true );
 
 get_header();
 ?>
@@ -17,19 +17,19 @@ get_header();
     <?php
     while ( have_posts() ) :
         the_post();
-        $location = get_post_meta( get_the_ID(), '_cp_location', true );
-        $type     = get_post_meta( get_the_ID(), '_cp_job_type', true );
-        $salary   = get_post_meta( get_the_ID(), '_cp_salary', true );
-        $deadline  = get_post_meta( get_the_ID(), CP_Deadline::META_KEY, true );
-        $is_closed = CP_Deadline::is_expired( get_the_ID() );
+        $location = get_post_meta( get_the_ID(), '_qwja_location', true );
+        $type     = get_post_meta( get_the_ID(), '_qwja_job_type', true );
+        $salary   = get_post_meta( get_the_ID(), '_qwja_salary', true );
+        $deadline  = get_post_meta( get_the_ID(), QWJA_Deadline::META_KEY, true );
+        $is_closed = QWJA_Deadline::is_expired( get_the_ID() );
         ?>
         <article id="post-<?php the_ID(); ?>" <?php post_class( 'cp-job-single' ); ?>>
             <header class="cp-job-single-header">
                 <p class="cp-job-single-back">
                     <?php
-                    $careers_url = cp_get_careers_page_url();
+                    $careers_url = qwja_get_careers_page_url();
                     if ( $careers_url ) {
-                        echo '<a href="' . esc_url( $careers_url ) . '">&larr; ' . esc_html__( 'Back to all positions', 'career-portal' ) . '</a>';
+                        echo '<a href="' . esc_url( $careers_url ) . '">&larr; ' . esc_html__( 'Back to all positions', 'qadwilliam-jobs-apply' ) . '</a>';
                     }
                     ?>
                 </p>
@@ -49,10 +49,10 @@ get_header();
                             <?php
                             if ( $is_closed ) {
                                 /* translators: %s: formatted closing date/time */
-                                printf( esc_html__( 'Closed %s', 'career-portal' ), esc_html( CP_Deadline::format_display( $deadline ) ) );
+                                printf( esc_html__( 'Closed %s', 'qadwilliam-jobs-apply' ), esc_html( QWJA_Deadline::format_display( $deadline ) ) );
                             } else {
                                 /* translators: %s: formatted closing date/time */
-                                printf( esc_html__( 'Closes %s', 'career-portal' ), esc_html( CP_Deadline::format_display( $deadline ) ) );
+                                printf( esc_html__( 'Closes %s', 'qadwilliam-jobs-apply' ), esc_html( QWJA_Deadline::format_display( $deadline ) ) );
                             }
                             ?>
                         </span>
@@ -65,10 +65,10 @@ get_header();
             </div>
 
             <?php
-            if ( ! $is_closed && ! has_shortcode( get_post()->post_content, 'career_apply' ) ) {
-                echo do_shortcode( '[career_apply]' );
+            if ( ! $is_closed && ! has_shortcode( get_post()->post_content, 'qwja_apply' ) ) {
+                echo do_shortcode( '[qwja_apply]' );
             } elseif ( $is_closed ) {
-                echo do_shortcode( '[career_apply job_id="' . (int) get_the_ID() . '"]' );
+                echo do_shortcode( '[qwja_apply job_id="' . (int) get_the_ID() . '"]' );
             }
             ?>
         </article>

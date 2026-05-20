@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * instead of silently failing or saving an incomplete record we return a clear
  * page explaining what's required.
  */
-class CP_NoJS_Handler {
+class QWJA_NoJS_Handler {
 
     public function __construct() {
         add_action( 'init', array( $this, 'maybe_handle' ) );
@@ -16,15 +16,15 @@ class CP_NoJS_Handler {
 
     public function maybe_handle() {
         if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || $_SERVER['REQUEST_METHOD'] !== 'POST' ) return;
-        if ( empty( $_POST['cp_nojs_submit'] ) ) return;
+        if ( empty( $_POST['qwja_nojs_submit'] ) ) return;
 
         // Don't interfere with the AJAX endpoint — that request goes to admin-ajax.php,
         // which uses its own dispatcher and never hits the `init` action this way.
         if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) return;
 
         wp_die(
-            esc_html__( 'JavaScript is required to submit your application. Please enable JavaScript in your browser and try again.', 'career-portal' ),
-            esc_html__( 'JavaScript Required', 'career-portal' ),
+            esc_html__( 'JavaScript is required to submit your application. Please enable JavaScript in your browser and try again.', 'qadwilliam-jobs-apply' ),
+            esc_html__( 'JavaScript Required', 'qadwilliam-jobs-apply' ),
             array( 'response' => 400, 'back_link' => true )
         );
     }
