@@ -25,18 +25,17 @@ define( 'QWJA_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 
 /**
  * Absolute filesystem path to the plugin's CV upload directory.
- * Lives under wp-content/uploads/ so it respects custom uploads paths and multisite.
- *
- * @return string Trailing-slashed path.
+ * Lives under the WordPress uploads basedir so it respects custom uploads paths and multisite.
+ * Returns '' if wp_upload_dir() reports an error; callers must treat that as "uploads unavailable".
  */
 if ( ! function_exists( 'qwja_upload_dir' ) ) {
     /**
-     * @return string Trailing-slashed path.
+     * @return string Trailing-slashed path, or '' if the uploads dir is unavailable.
      */
     function qwja_upload_dir() {
         $base = wp_upload_dir( null, false );
         if ( ! empty( $base['error'] ) || empty( $base['basedir'] ) ) {
-            return trailingslashit( WP_CONTENT_DIR ) . 'uploads/qadwilliam-jobs-apply/';
+            return '';
         }
         return trailingslashit( $base['basedir'] ) . 'qadwilliam-jobs-apply/';
     }
@@ -44,12 +43,12 @@ if ( ! function_exists( 'qwja_upload_dir' ) ) {
 
 if ( ! function_exists( 'qwja_upload_url' ) ) {
     /**
-     * @return string Trailing-slashed URL.
+     * @return string Trailing-slashed URL, or '' if the uploads URL is unavailable.
      */
     function qwja_upload_url() {
         $base = wp_upload_dir( null, false );
         if ( ! empty( $base['error'] ) || empty( $base['baseurl'] ) ) {
-            return trailingslashit( content_url( 'uploads' ) ) . 'qadwilliam-jobs-apply/';
+            return '';
         }
         return trailingslashit( $base['baseurl'] ) . 'qadwilliam-jobs-apply/';
     }
@@ -96,6 +95,7 @@ if ( ! function_exists( 'qwja_ajax_submit_fatal_shutdown' ) ) {
         }
 
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only diagnostic, gated behind WP_DEBUG.
             error_log(
                 'Qadwilliam Jobs & Apply fatal on submit AJAX: '
                 . $err['message'] . ' @ ' . $err['file'] . ':' . $err['line']
@@ -184,6 +184,10 @@ add_action( 'plugins_loaded', 'qwja_register_submit_ajax_fatal_handler', 1 );
 if ( ! function_exists( 'qwja_create_upload_dir' ) ) {
 function qwja_create_upload_dir() {
     $dir = qwja_upload_dir();
+
+    if ( '' === $dir ) {
+        return;
+    }
 
     if ( ! file_exists( $dir ) ) {
         wp_mkdir_p( $dir );

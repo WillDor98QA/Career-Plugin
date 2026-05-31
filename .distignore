@@ -5,6 +5,7 @@
 **/.DS_Store
 .cursor
 TEST_PLAN.md
+jobbly-*.md
 *.zip
 build-release.sh
 jobbly.zip

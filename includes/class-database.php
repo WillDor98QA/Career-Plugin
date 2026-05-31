@@ -3,6 +3,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class QWJA_Database {
 
+    // This class is the plugin's data layer for its own custom tables. Reads/writes
+    // go through $wpdb by necessity (no core API covers these tables), table names are
+    // always built from $wpdb->prefix + fixed suffixes (never user input), and the data
+    // is request-scoped admin/listing data that is intentionally not object-cached.
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, PluginCheck.Security.DirectDB.UnescapedDBParameter
+
     // Single source of truth for allowed application statuses.
     public static function allowed_statuses() {
         return array( 'pending', 'reviewing', 'interview', 'hired', 'rejected' );
@@ -268,12 +274,14 @@ class QWJA_Database {
     public static function get_application( $id ) {
         global $wpdb;
         $table = $wpdb->prefix . 'qwja_applications';
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table built from $wpdb->prefix; value is prepared.
         return $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $id ) );
     }
 
     public static function get_screening_answers( $application_id ) {
         global $wpdb;
         $table = $wpdb->prefix . 'qwja_screening_answers';
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table built from $wpdb->prefix; value is prepared.
         return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} WHERE application_id = %d", $application_id ) );
     }
 
@@ -283,4 +291,5 @@ class QWJA_Database {
         if ( ! in_array( $status, self::allowed_statuses(), true ) ) return false;
         return $wpdb->update( $table, array( 'status' => $status ), array( 'id' => $id ), array( '%s' ), array( '%d' ) );
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key, PluginCheck.Security.DirectDB.UnescapedDBParameter
 }

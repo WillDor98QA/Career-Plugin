@@ -17,42 +17,42 @@ get_header();
     <?php
     while ( have_posts() ) :
         the_post();
-        $location = get_post_meta( get_the_ID(), '_qwja_location', true );
-        $type     = get_post_meta( get_the_ID(), '_qwja_job_type', true );
-        $salary   = get_post_meta( get_the_ID(), '_qwja_salary', true );
-        $deadline  = get_post_meta( get_the_ID(), QWJA_Deadline::META_KEY, true );
-        $is_closed = QWJA_Deadline::is_expired( get_the_ID() );
+        $qwja_location  = get_post_meta( get_the_ID(), '_qwja_location', true );
+        $qwja_type      = get_post_meta( get_the_ID(), '_qwja_job_type', true );
+        $qwja_salary    = get_post_meta( get_the_ID(), '_qwja_salary', true );
+        $qwja_deadline  = get_post_meta( get_the_ID(), QWJA_Deadline::META_KEY, true );
+        $qwja_is_closed = QWJA_Deadline::is_expired( get_the_ID() );
         ?>
         <article id="post-<?php the_ID(); ?>" <?php post_class( 'cp-job-single' ); ?>>
             <header class="cp-job-single-header">
                 <p class="cp-job-single-back">
                     <?php
-                    $careers_url = qwja_get_careers_page_url();
-                    if ( $careers_url ) {
-                        echo '<a href="' . esc_url( $careers_url ) . '">&larr; ' . esc_html__( 'Back to all positions', 'qadwilliam-jobs-apply' ) . '</a>';
+                    $qwja_careers_url = qwja_get_careers_page_url();
+                    if ( $qwja_careers_url ) {
+                        echo '<a href="' . esc_url( $qwja_careers_url ) . '">&larr; ' . esc_html__( 'Back to all positions', 'qadwilliam-jobs-apply' ) . '</a>';
                     }
                     ?>
                 </p>
                 <h1 class="cp-job-single-title"><?php the_title(); ?></h1>
                 <div class="cp-job-meta cp-job-single-meta">
-                    <?php if ( $location ) : ?>
-                        <span class="cp-meta-tag cp-location"><?php echo esc_html( $location ); ?></span>
+                    <?php if ( $qwja_location ) : ?>
+                        <span class="cp-meta-tag cp-location"><?php echo esc_html( $qwja_location ); ?></span>
                     <?php endif; ?>
-                    <?php if ( $type ) : ?>
-                        <span class="cp-meta-tag cp-type"><?php echo esc_html( $type ); ?></span>
+                    <?php if ( $qwja_type ) : ?>
+                        <span class="cp-meta-tag cp-type"><?php echo esc_html( $qwja_type ); ?></span>
                     <?php endif; ?>
-                    <?php if ( $salary ) : ?>
-                        <span class="cp-meta-tag cp-salary"><?php echo esc_html( $salary ); ?></span>
+                    <?php if ( $qwja_salary ) : ?>
+                        <span class="cp-meta-tag cp-salary"><?php echo esc_html( $qwja_salary ); ?></span>
                     <?php endif; ?>
-                    <?php if ( $deadline ) : ?>
+                    <?php if ( $qwja_deadline ) : ?>
                         <span class="cp-meta-tag cp-deadline">
                             <?php
-                            if ( $is_closed ) {
+                            if ( $qwja_is_closed ) {
                                 /* translators: %s: formatted closing date/time */
-                                printf( esc_html__( 'Closed %s', 'qadwilliam-jobs-apply' ), esc_html( QWJA_Deadline::format_display( $deadline ) ) );
+                                printf( esc_html__( 'Closed %s', 'qadwilliam-jobs-apply' ), esc_html( QWJA_Deadline::format_display( $qwja_deadline ) ) );
                             } else {
                                 /* translators: %s: formatted closing date/time */
-                                printf( esc_html__( 'Closes %s', 'qadwilliam-jobs-apply' ), esc_html( QWJA_Deadline::format_display( $deadline ) ) );
+                                printf( esc_html__( 'Closes %s', 'qadwilliam-jobs-apply' ), esc_html( QWJA_Deadline::format_display( $qwja_deadline ) ) );
                             }
                             ?>
                         </span>
@@ -65,9 +65,9 @@ get_header();
             </div>
 
             <?php
-            if ( ! $is_closed && ! has_shortcode( get_post()->post_content, 'qwja_apply' ) ) {
+            if ( ! $qwja_is_closed && ! has_shortcode( get_post()->post_content, 'qwja_apply' ) ) {
                 echo do_shortcode( '[qwja_apply]' );
-            } elseif ( $is_closed ) {
+            } elseif ( $qwja_is_closed ) {
                 echo do_shortcode( '[qwja_apply job_id="' . (int) get_the_ID() . '"]' );
             }
             ?>

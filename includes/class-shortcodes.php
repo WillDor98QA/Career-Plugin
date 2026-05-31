@@ -60,9 +60,12 @@ class QWJA_Shortcodes {
      */
     private function get_listings_page() {
         $paged = (int) get_query_var( 'qwja_jobs_page' );
+        // Read-only pagination on a public page; no state change, so no nonce required.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
         if ( $paged < 1 && isset( $_GET['qwja_jobs_page'] ) ) {
-            $paged = (int) $_GET['qwja_jobs_page'];
+            $paged = absint( wp_unslash( $_GET['qwja_jobs_page'] ) );
         }
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         return max( 1, $paged );
     }
 
@@ -88,6 +91,7 @@ class QWJA_Shortcodes {
         );
 
         if ( $atts['department'] ) {
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Single optional department filter on a small set of job posts.
             $args['tax_query'] = array( array(
                 'taxonomy' => 'qwja_department',
                 'field'    => 'slug',
@@ -387,7 +391,10 @@ class QWJA_Shortcodes {
         $app = QWJA_Database::get_application( $id );
         if ( ! $app || ! $app->cv_file ) wp_die('File not found');
 
-        $path = qwja_upload_dir() . basename( $app->cv_file );
+        $dir = qwja_upload_dir();
+        if ( '' === $dir ) wp_die('File not found on server');
+
+        $path = $dir . basename( $app->cv_file );
         if ( ! file_exists($path) ) wp_die('File not found on server');
 
         $ext  = pathinfo($path, PATHINFO_EXTENSION);

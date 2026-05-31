@@ -1,8 +1,8 @@
 === Qadwilliam Jobs & Apply ===
 Contributors: qadwilliam
-Tags: careers, jobs, recruitment, hiring, applications, job board
+Tags: careers, jobs, recruitment, hiring, job board
 Requires at least: 6.0
-Tested up to: 6.9
+Tested up to: 7.0
 Stable tag: 1.0.1
 Requires PHP: 7.4
 License: GPLv2 or later

@@ -16,6 +16,7 @@ class QWJA_NoJS_Handler {
 
     public function maybe_handle() {
         if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || $_SERVER['REQUEST_METHOD'] !== 'POST' ) return;
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only checks for a marker field then calls wp_die(); no form data is processed or stored.
         if ( empty( $_POST['qwja_nojs_submit'] ) ) return;
 
         // Don't interfere with the AJAX endpoint — that request goes to admin-ajax.php,

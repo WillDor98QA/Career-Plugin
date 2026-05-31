@@ -140,6 +140,7 @@ class QWJA_Email_Notifications {
 
         if ( is_wp_error( $result ) ) {
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only diagnostic, gated behind WP_DEBUG.
                 error_log( 'Qadwilliam Jobs & Apply mail error: ' . $result->get_error_message() );
             }
             return false;

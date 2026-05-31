@@ -156,18 +156,18 @@ class QWJA_Post_Types {
         $fields = array( 'qwja_location', 'qwja_job_type', 'qwja_salary' );
         foreach ( $fields as $field ) {
             if ( isset( $_POST[ $field ] ) ) {
-                update_post_meta( $post_id, '_' . $field, sanitize_text_field( $_POST[ $field ] ) );
+                update_post_meta( $post_id, '_' . $field, sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) );
             }
         }
 
         if ( isset( $_POST['qwja_deadline'] ) ) {
-            update_post_meta( $post_id, QWJA_Deadline::META_KEY, QWJA_Deadline::sanitize_input( $_POST['qwja_deadline'] ) );
+            update_post_meta( $post_id, QWJA_Deadline::META_KEY, QWJA_Deadline::sanitize_input( sanitize_text_field( wp_unslash( $_POST['qwja_deadline'] ) ) ) );
         }
 
         update_post_meta( $post_id, '_qwja_require_portfolio', isset( $_POST['qwja_require_portfolio'] ) ? '1' : '0' );
 
         if ( isset( $_POST['qwja_screening_questions'] ) && is_array( $_POST['qwja_screening_questions'] ) ) {
-            $questions = array_filter( array_map( 'sanitize_text_field', $_POST['qwja_screening_questions'] ) );
+            $questions = array_filter( array_map( 'sanitize_text_field', wp_unslash( $_POST['qwja_screening_questions'] ) ) );
             // Drop duplicate question labels (case-insensitive, trimmed) so the
             // applicant form doesn't end up with conflicting array keys.
             $seen   = array();

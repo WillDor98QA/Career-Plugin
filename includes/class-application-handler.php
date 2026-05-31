@@ -18,6 +18,7 @@ class QWJA_Application_Handler {
             $this->do_handle_submission();
         } catch ( \Throwable $e ) {
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only diagnostic, gated behind WP_DEBUG.
                 error_log( 'Qadwilliam Jobs & Apply submission error: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine() );
             }
             if ( ! headers_sent() ) {
@@ -38,12 +39,12 @@ class QWJA_Application_Handler {
         // Trim-aware required field validation (whitespace-only names previously slipped through).
         $required = array( 'qwja_full_name', 'qwja_email', 'qwja_job_id' );
         foreach ( $required as $field ) {
-            if ( ! isset( $_POST[ $field ] ) || trim( (string) wp_unslash( $_POST[ $field ] ) ) === '' ) {
+            if ( ! isset( $_POST[ $field ] ) || trim( sanitize_text_field( wp_unslash( $_POST[ $field ] ) ) ) === '' ) {
                 wp_send_json_error( array( 'message' => 'Please fill in all required fields.' ) );
             }
         }
 
-        $job_id = absint( $_POST['qwja_job_id'] );
+        $job_id = absint( wp_unslash( $_POST['qwja_job_id'] ?? 0 ) );
         $job    = get_post( $job_id );
         if ( ! $job || $job->post_type !== 'qwja_job' || $job->post_status !== 'publish' ) {
             wp_send_json_error( array( 'message' => 'Invalid job listing.' ) );
@@ -53,14 +54,14 @@ class QWJA_Application_Handler {
             wp_send_json_error( array( 'message' => 'The application deadline for this position has passed.' ) );
         }
 
-        $email = sanitize_email( $_POST['qwja_email'] );
+        $email = sanitize_email( wp_unslash( $_POST['qwja_email'] ?? '' ) );
         if ( ! is_email( $email ) ) {
             wp_send_json_error( array( 'message' => 'Please enter a valid email address.' ) );
         }
 
         // Portfolio: required-flag check + URL validation regardless of required state.
         $require_portfolio = get_post_meta( $job_id, '_qwja_require_portfolio', true );
-        $portfolio_raw     = isset( $_POST['qwja_portfolio_url'] ) ? trim( (string) wp_unslash( $_POST['qwja_portfolio_url'] ) ) : '';
+        $portfolio_raw     = isset( $_POST['qwja_portfolio_url'] ) ? trim( sanitize_text_field( wp_unslash( $_POST['qwja_portfolio_url'] ) ) ) : '';
 
         if ( $require_portfolio === '1' && $portfolio_raw === '' ) {
             wp_send_json_error( array( 'message' => 'A portfolio link is required for this position.' ) );
@@ -83,7 +84,7 @@ class QWJA_Application_Handler {
         $configured_questions = get_post_meta( $job_id, '_qwja_screening_questions', true );
         if ( ! is_array( $configured_questions ) ) $configured_questions = array();
         $submitted_answers = isset( $_POST['qwja_screening'] ) && is_array( $_POST['qwja_screening'] )
-            ? wp_unslash( $_POST['qwja_screening'] )
+            ? array_map( 'sanitize_textarea_field', wp_unslash( $_POST['qwja_screening'] ) )
             : array();
 
         foreach ( $configured_questions as $question ) {
@@ -110,26 +111,25 @@ class QWJA_Application_Handler {
         // Rate-limit: block re-applying to the same job from the same email within the window.
         global $wpdb;
         $apps_table = $wpdb->prefix . 'qwja_applications';
-        $existing   = (int) $wpdb->get_var( $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$apps_table}
-             WHERE email = %s AND job_id = %d
-               AND submitted_at >= DATE_SUB( UTC_TIMESTAMP(), INTERVAL %d HOUR )",
-            $email, $job_id, self::DUPLICATE_WINDOW_HOURS
-        ) );
+        // Custom plugin table; query is prepared and $apps_table is built from $wpdb->prefix (not user input). The rate-limit check must read live data, so caching is intentionally not used.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $existing   = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$apps_table} WHERE email = %s AND job_id = %d AND submitted_at >= DATE_SUB( UTC_TIMESTAMP(), INTERVAL %d HOUR )", $email, $job_id, self::DUPLICATE_WINDOW_HOURS ) );
         if ( $existing > 0 ) {
             wp_send_json_error( array( 'message' => 'You have already applied for this position.' ) );
         }
 
         // Handle CV upload (after all other validation so we don't write files for bad submissions).
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- $_FILES entry is validated and sanitized by wp_handle_upload() inside handle_cv_upload().
         $cv_file = $this->handle_cv_upload( $_FILES['qwja_cv'] );
         if ( is_wp_error( $cv_file ) ) {
             wp_send_json_error( array( 'message' => $cv_file->get_error_message() ) );
         }
 
-        // Save application to database
+        // Save application to database.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Insert into the plugin's own table; nothing to cache.
         $inserted = $wpdb->insert( $apps_table, array(
             'job_id'       => $job_id,
-            'full_name'    => sanitize_text_field( wp_unslash( $_POST['qwja_full_name'] ) ),
+            'full_name'    => sanitize_text_field( wp_unslash( $_POST['qwja_full_name'] ?? '' ) ),
             'email'        => $email,
             'phone'        => sanitize_text_field( wp_unslash( $_POST['qwja_phone'] ?? '' ) ),
             'cover_letter' => sanitize_textarea_field( wp_unslash( $_POST['qwja_cover_letter'] ?? '' ) ),
@@ -155,6 +155,7 @@ class QWJA_Application_Handler {
             $answers_table = $wpdb->prefix . 'qwja_screening_answers';
             foreach ( $configured_questions as $question ) {
                 if ( $question === '' || ! isset( $submitted_answers[ $question ] ) ) continue;
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Insert into the plugin's own table; nothing to cache.
                 $wpdb->insert( $answers_table, array(
                     'application_id' => $application_id,
                     'question'       => sanitize_text_field( $question ),
@@ -170,6 +171,7 @@ class QWJA_Application_Handler {
             $notifications->notify_applicant( $application_id, $job );
         } catch ( \Throwable $e ) {
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Debug-only diagnostic, gated behind WP_DEBUG.
                 error_log( 'Qadwilliam Jobs & Apply email notification error: ' . $e->getMessage() );
             }
         }
@@ -263,22 +265,17 @@ class QWJA_Application_Handler {
      * @return array
      */
     public function filter_cv_upload_dir( $dirs ) {
-        // Derive from the incoming $dirs (the unfiltered upload base) so we never
-        // re-enter wp_upload_dir() / the upload_dir filter from inside the filter
-        // itself — that recursion exhausted PHP memory and surfaced as HTTP 500.
+        // Derive from the incoming $dirs so we never re-enter wp_upload_dir() /
+        // the upload_dir filter from inside the filter itself — that recursion
+        // exhausted PHP memory and surfaced as HTTP 500.
         $subdir = 'qadwilliam-jobs-apply';
 
-        if ( ! empty( $dirs['basedir'] ) ) {
-            $base_path = trailingslashit( $dirs['basedir'] ) . $subdir;
-        } else {
-            $base_path = trailingslashit( WP_CONTENT_DIR ) . 'uploads/' . $subdir;
+        if ( empty( $dirs['basedir'] ) || empty( $dirs['baseurl'] ) ) {
+            return $dirs;
         }
 
-        if ( ! empty( $dirs['baseurl'] ) ) {
-            $base_url = trailingslashit( $dirs['baseurl'] ) . $subdir;
-        } else {
-            $base_url = trailingslashit( content_url( 'uploads' ) ) . $subdir;
-        }
+        $base_path = trailingslashit( $dirs['basedir'] ) . $subdir;
+        $base_url  = trailingslashit( $dirs['baseurl'] ) . $subdir;
 
         $dirs['path']    = $base_path;
         $dirs['url']     = $base_url;
@@ -304,9 +301,14 @@ class QWJA_Application_Handler {
             return;
         }
 
+        $dir = qwja_upload_dir();
+        if ( '' === $dir ) {
+            return;
+        }
+
         require_once ABSPATH . 'wp-admin/includes/file.php';
 
-        $path = qwja_upload_dir() . basename( $filename );
+        $path = $dir . basename( $filename );
         if ( file_exists( $path ) ) {
             wp_delete_file( $path );
         }

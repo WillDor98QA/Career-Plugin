@@ -52,17 +52,21 @@ class QWJA_Admin {
             wp_die( esc_html__( 'Unauthorized', 'qadwilliam-jobs-apply' ) );
         }
 
-        $action = $_GET['action'] ?? 'list';
+        // The dashboard is a read-only admin list view filtered via GET; no state is
+        // changed here, so a nonce is not required for these reads.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
+        $action = sanitize_text_field( wp_unslash( $_GET['action'] ?? 'list' ) );
 
         if ( $action === 'view' && ! empty($_GET['id']) ) {
-            $this->render_single_application( absint($_GET['id']) );
+            $this->render_single_application( absint( wp_unslash( $_GET['id'] ) ) );
             return;
         }
 
         // Filters
-        $job_filter    = absint( $_GET['job_id'] ?? 0 );
-        $status_filter = sanitize_text_field( $_GET['status'] ?? '' );
-        $paged         = max(1, absint( $_GET['paged'] ?? 1 ) );
+        $job_filter    = absint( wp_unslash( $_GET['job_id'] ?? 0 ) );
+        $status_filter = sanitize_text_field( wp_unslash( $_GET['status'] ?? '' ) );
+        $paged         = max(1, absint( wp_unslash( $_GET['paged'] ?? 1 ) ) );
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         $per_page      = 20;
 
         $args = array(
@@ -273,7 +277,7 @@ class QWJA_Admin {
 
         if ( isset( $_POST['qwja_settings_nonce'] )
             && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['qwja_settings_nonce'] ) ), 'qwja_save_settings' ) ) {
-            update_option( 'qwja_admin_email', sanitize_email( $_POST['qwja_admin_email'] ?? '' ) );
+            update_option( 'qwja_admin_email', sanitize_email( wp_unslash( $_POST['qwja_admin_email'] ?? '' ) ) );
             QWJA_Mailer::save_from_post( $_POST );
             echo '<div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>';
         }
@@ -412,7 +416,7 @@ class QWJA_Admin {
             wp_send_json_error( array( 'message' => 'Unauthorized' ) );
         }
 
-        $to = sanitize_email( $_POST['email'] ?? '' );
+        $to = sanitize_email( wp_unslash( $_POST['email'] ?? '' ) );
         if ( ! is_email( $to ) ) {
             wp_send_json_error( array( 'message' => 'Enter a valid email address.' ) );
         }
@@ -431,8 +435,8 @@ class QWJA_Admin {
         if ( ! wp_verify_nonce( $nonce, 'qwja_admin_nonce' ) ) wp_send_json_error( 'Unauthorized' );
         if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error( 'Unauthorized' );
 
-        $id     = absint( $_POST['id'] ?? 0 );
-        $status = sanitize_text_field( $_POST['status'] ?? '' );
+        $id     = absint( wp_unslash( $_POST['id'] ?? 0 ) );
+        $status = sanitize_text_field( wp_unslash( $_POST['status'] ?? '' ) );
         $prev   = QWJA_Database::get_application($id);
 
         if ( QWJA_Database::update_status($id, $status) === false ) {
